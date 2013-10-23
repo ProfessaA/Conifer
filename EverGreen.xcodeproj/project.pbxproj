@@ -8,14 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		95CAF08C18174298009DF006 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF08B18174298009DF006 /* Foundation.framework */; };
-		95CAF09118174298009DF006 /* EverGreen.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95CAF09018174298009DF006 /* EverGreen.h */; };
-		95CAF09318174298009DF006 /* EverGreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF09218174298009DF006 /* EverGreen.m */; };
 		95CAF09A18174298009DF006 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF09918174298009DF006 /* XCTest.framework */; };
 		95CAF09B18174298009DF006 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF08B18174298009DF006 /* Foundation.framework */; };
 		95CAF09D18174298009DF006 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF09C18174298009DF006 /* UIKit.framework */; };
 		95CAF0A018174298009DF006 /* libEverGreen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF08818174297009DF006 /* libEverGreen.a */; };
 		95CAF0A618174298009DF006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 95CAF0A418174298009DF006 /* InfoPlist.strings */; };
 		95CAF0A818174298009DF006 /* EverGreenTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0A718174298009DF006 /* EverGreenTests.m */; };
+		95CAF0B3181746CA009DF006 /* NSObject+EverGreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */; };
+		95CAF0B4181746CA009DF006 /* NSObject+EverGreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,7 +35,6 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				95CAF09118174298009DF006 /* EverGreen.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,14 +44,14 @@
 		95CAF08818174297009DF006 /* libEverGreen.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libEverGreen.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		95CAF08B18174298009DF006 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		95CAF08F18174298009DF006 /* EverGreen-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "EverGreen-Prefix.pch"; sourceTree = "<group>"; };
-		95CAF09018174298009DF006 /* EverGreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EverGreen.h; sourceTree = "<group>"; };
-		95CAF09218174298009DF006 /* EverGreen.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EverGreen.m; sourceTree = "<group>"; };
 		95CAF09818174298009DF006 /* EverGreenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EverGreenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		95CAF09918174298009DF006 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		95CAF09C18174298009DF006 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		95CAF0A318174298009DF006 /* EverGreenTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "EverGreenTests-Info.plist"; sourceTree = "<group>"; };
 		95CAF0A518174298009DF006 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		95CAF0A718174298009DF006 /* EverGreenTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EverGreenTests.m; sourceTree = "<group>"; };
+		95CAF0B1181746CA009DF006 /* NSObject+EverGreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+EverGreen.h"; sourceTree = "<group>"; };
+		95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+EverGreen.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,8 +109,8 @@
 		95CAF08D18174298009DF006 /* EverGreen */ = {
 			isa = PBXGroup;
 			children = (
-				95CAF09018174298009DF006 /* EverGreen.h */,
-				95CAF09218174298009DF006 /* EverGreen.m */,
+				95CAF0B1181746CA009DF006 /* NSObject+EverGreen.h */,
+				95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */,
 				95CAF08E18174298009DF006 /* Supporting Files */,
 			);
 			path = EverGreen;
@@ -224,7 +223,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95CAF09318174298009DF006 /* EverGreen.m in Sources */,
+				95CAF0B3181746CA009DF006 /* NSObject+EverGreen.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,6 +232,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				95CAF0A818174298009DF006 /* EverGreenTests.m in Sources */,
+				95CAF0B4181746CA009DF006 /* NSObject+EverGreen.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
