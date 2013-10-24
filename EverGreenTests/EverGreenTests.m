@@ -78,6 +78,36 @@
               @"primitive return value not handled properly");
 }
 
+- (void)testStubbingDoesNotAffectUnstubbedMethods
+{
+    TestObject *stubbed1 = [TestObject new];
+    TestObject *stubbed2 = [TestObject new];
+    
+    [stubbed1 stub:@selector(repeatString:times:) andReturn:@"fake"];
+    [stubbed2 stub:@selector(intRetVal) andReturn:(void *)1000];
+    
+    XCTAssert([[stubbed2 repeatString:@"*" times:2] isEqualToString:@"**"],
+              @"unstubbed method returning stubbed value from other instance");
+    
+    XCTAssert([stubbed1 intRetVal] == 8,
+              @"unstubbed method returning stubbed value from other instance");
+}
+
+- (void)testStubbingIsInstanceIndependent
+{
+    TestObject *stubbed1 = [TestObject new];
+    TestObject *stubbed2 = [TestObject new];
+    
+    [stubbed1 stub:@selector(repeatString:times:) andReturn:@"fake"];
+    [stubbed2 stub:@selector(repeatString:times:) andReturn:@"faker"];
+    
+    XCTAssert([[stubbed1 repeatString:@"*" times:2] isEqualToString:@"fake"],
+              @"stubbed value affected by stub on different instance");
+    
+    XCTAssert([[stubbed2 repeatString:@"*" times:2] isEqualToString:@"faker"],
+              @"stubbed value affected by stub on different instance");
+}
+
 - (void)testStubbingDefinesMethodReturningNilByDefault
 {
     TestObject *stubbed = [TestObject new];

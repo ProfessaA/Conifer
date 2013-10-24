@@ -1,8 +1,8 @@
 #import "NSObject+EverGreen.h"
 #import <objc/runtime.h>
 
-const char *isStubbed = "isStubbed";
-const char *stubbedMethods = "stubbedMethods";
+const char *stubbedMethodsKey = "stubbedMethods";
+const char *stubbedMethodsMap = "stubbedMethodsMap";
 
 SEL unstubbedSelectorForSelector(SEL selector)
 {
@@ -24,8 +24,12 @@ SEL stubbedSelectorForSelector(SEL selector)
 
 - (void)stub:(SEL)selector
 {
-    if ([objc_getAssociatedObject(self, isStubbed) boolValue] == YES) return;
-    objc_setAssociatedObject(self, isStubbed, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    if ([self isSelectorStubbed:selector]) return;
+    
+    objc_setAssociatedObject(self,
+                             stubbedMethodsKey,
+                             [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
     Class class = [self class];
     Method unstubbedMethod = class_getInstanceMethod(class, selector);
@@ -53,10 +57,10 @@ SEL stubbedSelectorForSelector(SEL selector)
         }
         va_end(args);
         
-        if ([objc_getAssociatedObject(me, isStubbed) boolValue] == NO) {
-            [invocation setSelector:unstubbedSEL];
-        } else {
+        if ([me isSelectorStubbed:selector]) {
             [invocation setSelector:stubbedSEL];
+        } else {
+            [invocation setSelector:unstubbedSEL];
         }
         
         [invocation invoke];
@@ -110,6 +114,18 @@ SEL stubbedSelectorForSelector(SEL selector)
                         stubbedSEL,
                         stubbedIMP,
                         method_getTypeEncoding(class_getInstanceMethod([self class], unstubbedSEL)));
+}
+
+# pragma mark - Private
+
+- (NSArray *)stubbedMethods
+{
+    return objc_getAssociatedObject(self, stubbedMethodsKey);
+}
+
+- (BOOL)isSelectorStubbed:(SEL)selector
+{
+    return [[self stubbedMethods] containsObject:NSStringFromSelector(selector)];
 }
 
 @end
