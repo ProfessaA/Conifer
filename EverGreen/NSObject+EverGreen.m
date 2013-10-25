@@ -1,6 +1,7 @@
 #import "NSObject+EverGreen.h"
 #import <objc/runtime.h>
 
+const char *isStubbedKey = "isStubbed";
 const char *stubbedMethodsKey = "stubbedMethods";
 const char *stubbedMethodsMap = "stubbedMethodsMap";
 
@@ -22,9 +23,19 @@ SEL stubbedSelectorForSelector(SEL selector)
 
 @implementation NSObject (EverGreen)
 
+- (void)unstub
+{
+    if (![self isStubbed]) return;
+    Class originalClass = class_getSuperclass([self class]);
+    
+    object_setClass(self, originalClass);
+}
+
 - (void)stub:(SEL)selector
 {
     if ([self isSelectorStubbed:selector]) return;
+    
+    if (![self isStubbed]) [self stub];
     
     objc_setAssociatedObject(self,
                              stubbedMethodsKey,
@@ -32,21 +43,16 @@ SEL stubbedSelectorForSelector(SEL selector)
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
     Class class = [self class];
-    Method unstubbedMethod = class_getInstanceMethod(class, selector);
-    IMP unstubbedMethodImp = method_getImplementation(unstubbedMethod);
-    SEL unstubbedSEL = unstubbedSelectorForSelector(selector);
-
-    const char *unstubbedTypes = method_getTypeEncoding(unstubbedMethod);
-    class_addMethod(class, unstubbedSEL, unstubbedMethodImp, unstubbedTypes);
-    
+    Method originalMethod = class_getInstanceMethod(class, selector);
+    const char *methodTypes = method_getTypeEncoding(originalMethod);
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
     IMP defaultStub = imp_implementationWithBlock(^(id me, ...) { return nil; });
-    class_addMethod(class, stubbedSEL, defaultStub, unstubbedTypes);
+    class_addMethod(class, stubbedSEL, defaultStub, methodTypes);
     
-    NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:method_getTypeEncoding(unstubbedMethod)];
+    NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:method_getTypeEncoding(originalMethod)];
     IMP stubImp = imp_implementationWithBlock(^void* (id me, ...) {
         NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-        [invocation setTarget:me];
+        [invocation setSelector:stubbedSEL];
         
         va_list args;
         va_start(args, me);
@@ -57,13 +63,7 @@ SEL stubbedSelectorForSelector(SEL selector)
         }
         va_end(args);
         
-        if ([me isSelectorStubbed:selector]) {
-            [invocation setSelector:stubbedSEL];
-        } else {
-            [invocation setSelector:unstubbedSEL];
-        }
-        
-        [invocation invoke];
+        [invocation invokeWithTarget:me];
         NSString *retType = [NSString stringWithUTF8String:[signature methodReturnType]];
         if ([retType isEqualToString:@"v"]) return nil;
         
@@ -72,15 +72,14 @@ SEL stubbedSelectorForSelector(SEL selector)
         return retVal;
     });
     
-    method_setImplementation(unstubbedMethod, stubImp);
+    class_addMethod(class, selector, stubImp, methodTypes);
 }
 
 - (void)stubAndCallThrough:(SEL)selector
 {
     [self stub:selector];
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    SEL unstubbedSEL = unstubbedSelectorForSelector(selector);
-    Method unstubbedMethod = class_getInstanceMethod([self class], unstubbedSEL);
+    Method unstubbedMethod = class_getInstanceMethod(class_getSuperclass([self class]), selector);
     
     class_replaceMethod([self class],
                         stubbedSEL,
@@ -94,12 +93,11 @@ SEL stubbedSelectorForSelector(SEL selector)
     
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
     IMP stubbedIMP = imp_implementationWithBlock(^{ return returnValue; });
-    SEL unstubbedSEL = unstubbedSelectorForSelector(selector);
     
     class_replaceMethod([self class],
                         stubbedSEL,
                         stubbedIMP,
-                        method_getTypeEncoding(class_getInstanceMethod([self class], unstubbedSEL)));
+                        method_getTypeEncoding(class_getInstanceMethod([self class], selector)));
 }
 
 - (void)stub:(SEL)selector andCallFake:(id)block
@@ -117,6 +115,23 @@ SEL stubbedSelectorForSelector(SEL selector)
 }
 
 # pragma mark - Private
+
+- (void)stub
+{
+    NSString *objectMetaClassName = [NSString stringWithFormat:@"%@%p", NSStringFromClass([self class]), self];
+    Class objectMetaClass = objc_allocateClassPair([self class], [objectMetaClassName UTF8String], 0);
+    if (objectMetaClass) {
+        objc_registerClassPair(objectMetaClass);
+        object_setClass(self, objectMetaClass);
+    }
+    
+    objc_setAssociatedObject(self, isStubbedKey, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)isStubbed
+{
+    return [objc_getAssociatedObject(self, isStubbedKey) boolValue];
+}
 
 - (NSArray *)stubbedMethods
 {

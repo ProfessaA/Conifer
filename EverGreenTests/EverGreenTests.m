@@ -50,15 +50,6 @@
     [super tearDown];
 }
 
-- (void)testStubbingMovesOriginalMethodToUnstubbed
-{
-    TestObject *stubbed = [TestObject new];
-    
-    [stubbed stub:@selector(repeatString:times:)];
-    XCTAssert([objc_msgSend(stubbed, NSSelectorFromString(@"_unstubbedRepeatString:times:"), @"*", 2) isEqualToString:@"**"],
-              @"unstubbed method not moved correctly");
-}
-
 - (void)testStubbingDoesNotAffectUnstubbedInstances
 {
     TestObject *unstubbed = [TestObject new];
@@ -166,6 +157,20 @@
     
     XCTAssert([[stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
               @"stub and call fake not invoking fake block");
+}
+
+- (void)testUnstub
+{
+    TestObject *stubbed = [TestObject new];
+    
+    [stubbed stub:@selector(repeatString:times:) andCallFake:
+     ^NSString* (TestObject *me, NSString *string, NSUInteger times) {
+         return @"fake";
+     }];
+    
+    [stubbed unstub];
+    XCTAssert([[stubbed repeatString:@"*" times:2] isEqualToString:@"**"],
+              @"unstubbing stubbed object not restoring original behavior");
 }
 
 @end

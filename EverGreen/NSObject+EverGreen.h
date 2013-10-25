@@ -2,6 +2,8 @@
 
 @interface NSObject (EverGreen)
 
+- (void)unstub;
+
 - (void)stub:(SEL)selector;
 
 - (void)stubAndCallThrough:(SEL)selector;
