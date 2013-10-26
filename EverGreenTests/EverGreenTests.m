@@ -173,4 +173,16 @@
               @"unstubbing stubbed object not restoring original behavior");
 }
 
+- (void)testStubReturnsOriginalClass
+{
+    TestObject *stubbed = [TestObject new];
+    
+    [stubbed stub:@selector(intRetVal) andReturn:(void *)1000];
+    XCTAssert([stubbed class] == [TestObject class],
+              @"stubbed object doesn't return original class");
+    
+    XCTAssert([stubbed isMemberOfClass:[TestObject class]],
+              @"stubbed object doesn't return original class");
+}
+
 @end
