@@ -253,19 +253,34 @@
 {
     [TestObject stub:@selector(classMethod) andReturn:@"faked out"];
     XCTAssert([[TestObject classMethod] isEqualToString:@"faked out"],
-              @"stub andReturn not returning original value");
+              @"stub andReturn not returning given value");
+}
+
+- (void)testClassMethodStubbingAndCallingFake
+{
+    [TestObject stub:@selector(classMethod) andCallFake:^NSString* (id me){
+        return [NSString stringWithFormat:@"%@ fake", NSStringFromClass(me)];
+    }];
+    
+    XCTAssert([[TestObject classMethod] isEqualToString:@"TestObject fake"],
+              @"stub andCallFake not returning value from given block");
+}
+
+- (void)testClassesCanBeQueriedAboutStubs
+{
+    [TestObject stub:@selector(classMethod)];
+    XCTAssertTrue([TestObject isStubbingMethods],
+                  @"stubbed instance returning false for hasStubbedMethods");
+    
+    XCTAssertTrue([TestObject isStubbingMethod:@selector(classMethod)],
+                  @"instance stubbing method returning false for isStubbingMethod");
+    
+    XCTAssertFalse([TestObject isStubbingMethod:@selector(class)],
+                   @"instance not stubbing method returning true for isStubbingMethod");
 }
 
 - (void)testStubbedClassReturnSameClassAsBefore
 {
-    XCTAssert([self.unstubbed class] == [TestObject class],
-              @"+class does not return same value as unstubbed instance -class");
-    
-    [self.stubbed stub:@selector(intRetVal)];
-    XCTAssert([self.stubbed class] == [TestObject class],
-              @"+class does not return same value as stubbed instance -class");
-
-    
     [TestObject stub:@selector(classMethod)];
     
     XCTAssert([self.stubbed class] == [TestObject class],

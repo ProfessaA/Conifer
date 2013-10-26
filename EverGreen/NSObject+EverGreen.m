@@ -17,33 +17,6 @@ SEL stubbedSelectorForSelector(SEL selector)
     return NSSelectorFromString([@"_stubbed" stringByAppendingString:selectorString]);
 }
 
-#pragma mark - Stubbing Meta Information
-
-BOOL isStubbed(id self)
-{
-    return [objc_getAssociatedObject(self, isStubbedKey) boolValue];
-}
-
-NSArray * stubbedMethodsForObject(id self)
-{
-    return objc_getAssociatedObject(self, stubbedMethodsKey);
-}
-
-BOOL isSelectorStubbedForObject(SEL selector, id self)
-{
-    return [stubbedMethodsForObject(self) containsObject:NSStringFromSelector(selector)];
-}
-
-void addSelectorToStubbedMethodListForObject(SEL selector, id self)
-{
-    NSString *selectorString = NSStringFromSelector(selector);
-    
-    objc_setAssociatedObject(self,
-                             stubbedMethodsKey,
-                             [@[selectorString] arrayByAddingObjectsFromArray:stubbedMethodsForObject(self)],
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
 #pragma mark - Creating Initial Stub Method
 
 id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *signature)
@@ -98,58 +71,38 @@ void createStubClass(id self)
     objc_setAssociatedObject(self, isStubbedKey, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-# pragma mark - Stubbing
-
-void stubSelectorForObject(SEL selector, id self)
-{
-    if (isSelectorStubbedForObject(selector, self)) return;
-    if (!isStubbed(self)) objc_msgSend(self, NSSelectorFromString(@"_stub"));
-    
-    addSelectorToStubbedMethodListForObject(selector, self);
-    addStubMethodForSelector(self, selector);
-}
-
-void stubSelectorForObjectAndCallThrough(SEL selector, id self)
-{
-    [self stub:selector];
-    SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    Method unstubbedMethod = class_getInstanceMethod(class_getSuperclass(object_getClass(self)), selector);
-    
-    class_replaceMethod(object_getClass(self),
-                        stubbedSEL,
-                        method_getImplementation(unstubbedMethod),
-                        method_getTypeEncoding(unstubbedMethod));
-}
-
 @implementation NSObject (EverGreen)
 
 #pragma mark - Querying Stubbed Objects
 
 - (BOOL)isStubbingMethod:(SEL)selector
 {
-    return [stubbedMethodsForObject(self) containsObject:NSStringFromSelector(selector)];
+    return [[self stubbedMethods] containsObject:NSStringFromSelector(selector)];
 }
 
 - (BOOL)isStubbingMethods
 {
-    return isStubbed(self);
+    return [objc_getAssociatedObject(self, isStubbedKey) boolValue];
 }
 
 #pragma mark - stub:
 
-+ (void)stub:(SEL)selector
+- (void)stub:(SEL)selector
 {
-    stubSelectorForObject(selector, self);
+    if ([self isStubbingMethod:selector]) return;
+    if (![self isStubbingMethods]) [self _stub];
+    
+    objc_setAssociatedObject(self,
+                             stubbedMethodsKey,
+                             [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    
+    addStubMethodForSelector(self, selector);
 }
 
 + (void)_stub
 {
     createStubClass(self);
-}
-
-- (void)stub:(SEL)selector
-{
-    stubSelectorForObject(selector, self);
 }
 
 - (void)_stub
@@ -165,7 +118,7 @@ void stubSelectorForObjectAndCallThrough(SEL selector, id self)
 
 - (void)unstub
 {
-    if (!isStubbed(self)) {
+    if (![self isStubbingMethods]) {
         [NSException raise:EverGreenStubException
                     format:@"You tried to unstub an instance that was never stubbed: %@", self];
     }
@@ -182,7 +135,14 @@ void stubSelectorForObjectAndCallThrough(SEL selector, id self)
 
 - (void)stubAndCallThrough:(SEL)selector
 {
-    stubSelectorForObjectAndCallThrough(selector, self);
+    [self stub:selector];
+    SEL stubbedSEL = stubbedSelectorForSelector(selector);
+    Method unstubbedMethod = class_getInstanceMethod(class_getSuperclass(object_getClass(self)), selector);
+    
+    class_replaceMethod(object_getClass(self),
+                        stubbedSEL,
+                        method_getImplementation(unstubbedMethod),
+                        method_getTypeEncoding(unstubbedMethod));
 }
 
 #pragma mark - stub:andReturn:
@@ -212,6 +172,13 @@ void stubSelectorForObjectAndCallThrough(SEL selector, id self)
                         stubbedSEL,
                         stubbedIMP,
                         method_getTypeEncoding(class_getInstanceMethod([self class], selector)));
+}
+
+# pragma mark - Private
+
+-(NSArray *)stubbedMethods
+{
+    return objc_getAssociatedObject(self, stubbedMethodsKey);
 }
 
 @end
