@@ -10,6 +10,11 @@
 
 @implementation TestObject
 
++ (NSString *)classMethod
+{
+    return @"just a run of the mill class method";
+}
+
 - (NSString *)repeatString:(NSString *)string times:(NSUInteger)times
 {
     NSMutableString *repeatedString = [@"" mutableCopy];
@@ -34,6 +39,10 @@
 
 @interface EverGreenTests : XCTestCase
 
+@property (nonatomic, strong) TestObject *stubbed;
+@property (nonatomic, strong) TestObject *anotherStubbedObject;
+@property (nonatomic, strong) TestObject *unstubbed;
+
 @end
 
 @implementation EverGreenTests
@@ -41,155 +50,229 @@
 - (void)setUp
 {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    
+    self.stubbed = [TestObject new];
+    self.anotherStubbedObject = [TestObject new];
+    self.unstubbed = [TestObject new];
 }
 
 - (void)tearDown
 {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    if ([self.stubbed isStubbingMethods]) [self.stubbed unstub];
+    if ([self.anotherStubbedObject isStubbingMethods]) [self.anotherStubbedObject unstub];
+
+    if ([TestObject isStubbingMethods]) [TestObject unstub];
+    
     [super tearDown];
 }
 
 - (void)testStubbingDoesNotAffectUnstubbedInstances
 {
-    TestObject *unstubbed = [TestObject new];
-    TestObject *stubbed = [TestObject new];
+    [self.stubbed stub:@selector(repeatString:times:)];
+    [self.stubbed stub:@selector(voidRetVal)];
+    [self.stubbed stub:@selector(intRetVal)];
     
-    [stubbed stub:@selector(repeatString:times:)];
-    [stubbed stub:@selector(voidRetVal)];
-    [stubbed stub:@selector(intRetVal)];
-    
-    XCTAssert([[unstubbed repeatString:@"*" times:2] isEqualToString:@"**"],
+    XCTAssert([[self.unstubbed repeatString:@"*" times:2] isEqualToString:@"**"],
               @"object return value not handled properly");
     
-    XCTAssertNoThrow([unstubbed voidRetVal],
+    XCTAssertNoThrow([self.unstubbed voidRetVal],
                      @"void return values not handled properly");
     
-    XCTAssert([unstubbed intRetVal] == 8,
+    XCTAssert([self.unstubbed intRetVal] == 8,
               @"primitive return value not handled properly");
-}
-
-- (void)testStubbingDoesNotAffectUnstubbedMethods
-{
-    TestObject *stubbed1 = [TestObject new];
-    TestObject *stubbed2 = [TestObject new];
-    
-    [stubbed1 stub:@selector(repeatString:times:) andReturn:@"fake"];
-    [stubbed2 stub:@selector(intRetVal) andReturn:(void *)1000];
-    
-    XCTAssert([[stubbed2 repeatString:@"*" times:2] isEqualToString:@"**"],
-              @"unstubbed method returning stubbed value from other instance");
-    
-    XCTAssert([stubbed1 intRetVal] == 8,
-              @"unstubbed method returning stubbed value from other instance");
-}
-
-- (void)testStubbingIsInstanceIndependent
-{
-    TestObject *stubbed1 = [TestObject new];
-    TestObject *stubbed2 = [TestObject new];
-    
-    [stubbed1 stub:@selector(repeatString:times:) andReturn:@"fake"];
-    [stubbed2 stub:@selector(repeatString:times:) andReturn:@"faker"];
-    
-    XCTAssert([[stubbed1 repeatString:@"*" times:2] isEqualToString:@"fake"],
-              @"stubbed value affected by stub on different instance");
-    
-    XCTAssert([[stubbed2 repeatString:@"*" times:2] isEqualToString:@"faker"],
-              @"stubbed value affected by stub on different instance");
 }
 
 - (void)testStubbingDefinesMethodReturningNilByDefault
 {
-    TestObject *stubbed = [TestObject new];
-    
-    [stubbed stub:@selector(repeatString:times:)];
-    XCTAssert(objc_msgSend(stubbed, NSSelectorFromString(@"_stubbedRepeatString:times:"), @"*", 2) == nil,
+    [self.stubbed stub:@selector(repeatString:times:)];
+    XCTAssert(objc_msgSend(self.stubbed, NSSelectorFromString(@"_stubbedRepeatString:times:"), @"*", 2) == nil,
               @"stubbed method not returning nil");
 }
 
 - (void)testStubbingReturnsNilAsDefault
 {
-    TestObject *stubbed = [TestObject new];
-    
-    [stubbed stub:@selector(repeatString:times:)];
-    XCTAssert([stubbed repeatString:@"*" times:8] == nil,
+    [self.stubbed stub:@selector(repeatString:times:)];
+    XCTAssert([self.stubbed repeatString:@"*" times:8] == nil,
               @"tubbed method not returning nil");
 }
 
 - (void)testStubbingAndCallingThrough
 {
-    TestObject *stubbed = [TestObject new];
-    
-    [stubbed stubAndCallThrough:@selector(repeatString:times:)];
-    XCTAssert([[stubbed repeatString:@"*" times:2] isEqualToString:@"**"],
+    [self.stubbed stubAndCallThrough:@selector(repeatString:times:)];
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"**"],
               @"stub and call through not returning original value");
 }
 
 - (void)testStubbingAndReturningObject
 {
-    TestObject *stubbed = [TestObject new];
+    [self.stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
     
-    [stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
-    
-    XCTAssert([[stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
               @"stub and return not properly returning given object");
 }
 
 - (void)testStubbingAndReturningPrimitive
 {
-    TestObject *stubbed = [TestObject new];
+    [self.stubbed stub:@selector(intRetVal) andReturn:(void *)32];
     
-    [stubbed stub:@selector(intRetVal) andReturn:(void *)32];
-    
-    XCTAssert([stubbed intRetVal] == 32,
+    XCTAssert([self.stubbed intRetVal] == 32,
               @"stub and return not properly returning given primitive");
+}
+
+- (void)testStubbingDoesNotAffectUnstubbedMethods
+{
+    [self.stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
+    [self.anotherStubbedObject stub:@selector(intRetVal) andReturn:(void *)1000];
+    
+    XCTAssert([[self.anotherStubbedObject repeatString:@"*" times:2] isEqualToString:@"**"],
+              @"unstubbed method returning stubbed value from other instance");
+    
+    XCTAssert([self.stubbed intRetVal] == 8,
+              @"unstubbed method returning stubbed value from other instance");
+}
+
+- (void)testStubbingIsInstanceIndependent
+{
+    [self.stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
+    [self.anotherStubbedObject stub:@selector(repeatString:times:) andReturn:@"faker"];
+    
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
+              @"stubbed value affected by stub on different instance");
+    
+    XCTAssert([[self.anotherStubbedObject repeatString:@"*" times:2] isEqualToString:@"faker"],
+              @"stubbed value affected by stub on different instance");
 }
 
 - (void)testStubbingAndCallingFake
 {
-    TestObject *stubbed = [TestObject new];
-    
-    [stubbed stub:@selector(repeatString:times:) andCallFake:
+    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
      ^NSString* (TestObject *me, NSString *string, NSUInteger times) {
          return @"fake";
      }];
     
-    XCTAssert([[stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
               @"stub and call fake not invoking fake block");
+}
+
+- (void)testStubbingAndCallingFakeWithIncompleteArguments
+{
+    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
+     ^{
+         return @"no args";
+     }];
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"no args"],
+              @"stub and call fake with block with no arguments failed");
+    
+    
+    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
+     ^id (TestObject *me) {
+         return me;
+     }];
+    
+    XCTAssert((id)[self.stubbed repeatString:@"*" times:2] == self.stubbed,
+              @"stub and call fake with block with fewer arguments than method failed");
 }
 
 - (void)testUnstub
 {
-    TestObject *stubbed = [TestObject new];
-    
-    [stubbed stub:@selector(repeatString:times:) andCallFake:
+    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
      ^NSString* (TestObject *me, NSString *string, NSUInteger times) {
          return @"fake";
      }];
     
-    [stubbed unstub];
-    XCTAssert([[stubbed repeatString:@"*" times:2] isEqualToString:@"**"],
+    [self.stubbed unstub];
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"**"],
               @"unstubbing stubbed object not restoring original behavior");
+}
+
+- (void)testStubbingThenUnstubbingThenReStubbingDoesNotThrowErrors
+{
+    [self.stubbed stub:@selector(repeatString:times:)];
+    [self.stubbed unstub];
+    
+    XCTAssertNoThrow([self.stubbed stub:@selector(intRetVal)],
+                     @"stubbing instance after unstubbing it throws an error");
 }
 
 - (void)testUnstubThrowsErrorForInstanceThatIsNotStubbed
 {
-    TestObject *unstubbed = [TestObject new];
-    XCTAssertThrows([unstubbed unstub],
+    XCTAssertThrows([self.unstubbed unstub],
                     @"unstubbing instance that was never stubbed did not cause an exception");
 }
 
 - (void)testStubReturnsOriginalClass
 {
-    TestObject *stubbed = [TestObject new];
+    [self.stubbed stub:@selector(intRetVal) andReturn:(void *)1000];
     
-    [stubbed stub:@selector(intRetVal) andReturn:(void *)1000];
-    XCTAssert([stubbed class] == [TestObject class],
+    XCTAssert([self.stubbed class] == [TestObject class],
               @"stubbed object doesn't return original class");
     
-    XCTAssert([stubbed isMemberOfClass:[TestObject class]],
+    XCTAssert([self.stubbed isMemberOfClass:[TestObject class]],
               @"stubbed object doesn't return original class");
+}
+
+- (void)testInstancesCanBeQueriedAboutStubs
+{
+    [self.stubbed stub:@selector(intRetVal)];
+    XCTAssertTrue([self.stubbed isStubbingMethods],
+                  @"stubbed instance returning false for hasStubbedMethods");
+    
+    XCTAssertTrue([self.stubbed isStubbingMethod:@selector(intRetVal)],
+                  @"instance stubbing method returning false for isStubbingMethod");
+    
+    XCTAssertFalse([self.stubbed isStubbingMethod:@selector(voidRetVal)],
+                  @"instance not stubbing method returning true for isStubbingMethod");
+}
+
+- (void)testClassMethodsCanBeStubbed
+{
+    [TestObject stub:@selector(classMethod)];
+    XCTAssert([TestObject classMethod] == nil,
+              @"class method was not stubbed");
+}
+
+- (void)testClassMethodsCanBeUnStubbed
+{
+    NSString *originalReturnValue = [TestObject classMethod];
+    [TestObject stub:@selector(classMethod)];
+    [TestObject unstub];
+    
+    XCTAssert([[TestObject classMethod] isEqualToString:originalReturnValue],
+              @"class method not restored after unstubbing");
+}
+
+- (void)testClassMethodStubbingAndCallingThrough
+{
+    NSString *originalReturnValue = [TestObject classMethod];
+    [TestObject stubAndCallThrough:@selector(classMethod)];
+    XCTAssert([[TestObject classMethod] isEqualToString:originalReturnValue],
+              @"stub and call through not returning original value");
+}
+
+- (void)testClassMethodStubbingAndReturning
+{
+    [TestObject stub:@selector(classMethod) andReturn:@"faked out"];
+    XCTAssert([[TestObject classMethod] isEqualToString:@"faked out"],
+              @"stub andReturn not returning original value");
+}
+
+- (void)testStubbedClassReturnSameClassAsBefore
+{
+    XCTAssert([self.unstubbed class] == [TestObject class],
+              @"+class does not return same value as unstubbed instance -class");
+    
+    [self.stubbed stub:@selector(intRetVal)];
+    XCTAssert([self.stubbed class] == [TestObject class],
+              @"+class does not return same value as stubbed instance -class");
+
+    
+    [TestObject stub:@selector(classMethod)];
+    
+    XCTAssert([self.stubbed class] == [TestObject class],
+              @"+class does not return same value as stubbed instance -class");
+    
+    XCTAssert([self.unstubbed class] == [TestObject class],
+              @"+class does not return same value as unstubbed instance -class");
 }
 
 @end

@@ -1,10 +1,11 @@
 #import "NSObject+EverGreen.h"
 #import <objc/runtime.h>
+#import <objc/message.h>
 
 NSString * const EverGreenStubException = @"EverGreenStubException";
 
-const char *stubbedMethodsKey = "stubbedMethods";
-const char *stubClassKey = "stubClass";
+const char *stubbedMethodsKey = "stubbedMethodsKey";
+const char *isStubbedKey = "isStubbedKey";
 
 #pragma mark - Utility Functions
 
@@ -15,6 +16,35 @@ SEL stubbedSelectorForSelector(SEL selector)
                                                              withString:[[selectorString substringToIndex:1] uppercaseString]];
     return NSSelectorFromString([@"_stubbed" stringByAppendingString:selectorString]);
 }
+
+#pragma mark - Stubbing Meta Information
+
+BOOL isStubbed(id self)
+{
+    return [objc_getAssociatedObject(self, isStubbedKey) boolValue];
+}
+
+NSArray * stubbedMethodsForObject(id self)
+{
+    return objc_getAssociatedObject(self, stubbedMethodsKey);
+}
+
+BOOL isSelectorStubbedForObject(SEL selector, id self)
+{
+    return [stubbedMethodsForObject(self) containsObject:NSStringFromSelector(selector)];
+}
+
+void addSelectorToStubbedMethodListForObject(SEL selector, id self)
+{
+    NSString *selectorString = NSStringFromSelector(selector);
+    
+    objc_setAssociatedObject(self,
+                             stubbedMethodsKey,
+                             [@[selectorString] arrayByAddingObjectsFromArray:stubbedMethodsForObject(self)],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+#pragma mark - Creating Initial Stub Method
 
 id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *signature)
 {
@@ -42,56 +72,120 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
     };
 }
 
-#pragma mark - Implementation
-
-@implementation NSObject (EverGreen)
-
-- (void)unstub
+void addStubMethodForSelector(id self, SEL selector)
 {
-    if (![self isStubbed]) {
-        [NSException raise:EverGreenStubException
-                    format:@"You tried to unstub an instance that was never stubbed: %@", self];
-    }
-    
-    objc_setAssociatedObject(self, stubClassKey, nil, OBJC_ASSOCIATION_ASSIGN);
-    objc_setAssociatedObject(self, stubbedMethodsKey, nil, OBJC_ASSOCIATION_ASSIGN);
-    object_setClass(self, [self class]);
-}
-
-- (void)stub:(SEL)selector
-{
-    if ([self isSelectorStubbed:selector]) return;
-    
-    if (![self isStubbed]) [self stub];
-    
-    objc_setAssociatedObject(self,
-                             stubbedMethodsKey,
-                             [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    
-    Method originalMethod = class_getInstanceMethod([self class], selector);
+    Method originalMethod = class_getInstanceMethod(class_getSuperclass(object_getClass(self)), selector);
     const char *methodTypes = method_getTypeEncoding(originalMethod);
+    
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
     IMP defaultStub = imp_implementationWithBlock(^(id me, ...) { return nil; });
-    class_addMethod([self stubClass], stubbedSEL, defaultStub, methodTypes);
+    class_addMethod(object_getClass(self), stubbedSEL, defaultStub, methodTypes);
     
     NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:methodTypes];
     IMP stubImp = imp_implementationWithBlock(stubBlockForSelectorWithMethodSignature(selector, signature));
     
-    class_addMethod([self stubClass], selector, stubImp, methodTypes);
+    class_addMethod(object_getClass(self), selector, stubImp, methodTypes);
 }
 
-- (void)stubAndCallThrough:(SEL)selector
+void createStubClass(id self)
+{
+    NSString *objectMetaClassName = [NSString stringWithFormat:@"%@%p", NSStringFromClass([self class]), self];
+    Class objectMetaClass = objc_allocateClassPair(object_getClass(self), [objectMetaClassName UTF8String], 0);
+    if (!objectMetaClass) [NSException raise:EverGreenStubException format:@"an error occurred when attempting to stub %@", self];
+    
+    objc_registerClassPair(objectMetaClass);
+    object_setClass(self, objectMetaClass);
+    objc_setAssociatedObject(self, isStubbedKey, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+# pragma mark - Stubbing
+
+void stubSelectorForObject(SEL selector, id self)
+{
+    if (isSelectorStubbedForObject(selector, self)) return;
+    if (!isStubbed(self)) objc_msgSend(self, NSSelectorFromString(@"_stub"));
+    
+    addSelectorToStubbedMethodListForObject(selector, self);
+    addStubMethodForSelector(self, selector);
+}
+
+void stubSelectorForObjectAndCallThrough(SEL selector, id self)
 {
     [self stub:selector];
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    Method unstubbedMethod = class_getInstanceMethod([self class], selector);
+    Method unstubbedMethod = class_getInstanceMethod(class_getSuperclass(object_getClass(self)), selector);
     
-    class_replaceMethod([self stubClass],
+    class_replaceMethod(object_getClass(self),
                         stubbedSEL,
                         method_getImplementation(unstubbedMethod),
                         method_getTypeEncoding(unstubbedMethod));
 }
+
+@implementation NSObject (EverGreen)
+
+#pragma mark - Querying Stubbed Objects
+
+- (BOOL)isStubbingMethod:(SEL)selector
+{
+    return [stubbedMethodsForObject(self) containsObject:NSStringFromSelector(selector)];
+}
+
+- (BOOL)isStubbingMethods
+{
+    return isStubbed(self);
+}
+
+#pragma mark - stub:
+
++ (void)stub:(SEL)selector
+{
+    stubSelectorForObject(selector, self);
+}
+
++ (void)_stub
+{
+    createStubClass(self);
+}
+
+- (void)stub:(SEL)selector
+{
+    stubSelectorForObject(selector, self);
+}
+
+- (void)_stub
+{
+    createStubClass(self);
+    
+    Class originalClass = class_getSuperclass(object_getClass(self));
+    IMP classIMP = imp_implementationWithBlock(^{ return originalClass; });
+    class_addMethod(object_getClass(self), @selector(class), classIMP, "@@:");
+}
+
+#pragma mark - unstub:
+
+- (void)unstub
+{
+    if (!isStubbed(self)) {
+        [NSException raise:EverGreenStubException
+                    format:@"You tried to unstub an instance that was never stubbed: %@", self];
+    }
+    
+    Class StubClass = object_getClass(self);
+    object_setClass(self, class_getSuperclass(StubClass));
+    objc_disposeClassPair(StubClass);
+    
+    objc_setAssociatedObject(self, isStubbedKey, nil, OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(self, stubbedMethodsKey, nil, OBJC_ASSOCIATION_ASSIGN);
+}
+
+#pragma mark - stubAndCallThrough:
+
+- (void)stubAndCallThrough:(SEL)selector
+{
+    stubSelectorForObjectAndCallThrough(selector, self);
+}
+
+#pragma mark - stub:andReturn:
 
 - (void)stub:(SEL)selector andReturn:(void *)returnValue
 {
@@ -101,7 +195,7 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
     IMP stubbedIMP = imp_implementationWithBlock(^{ return returnValue; });
     Method unstubbedMethod = class_getInstanceMethod([self class], selector);
     
-    class_replaceMethod([self stubClass],
+    class_replaceMethod(object_getClass(self),
                         stubbedSEL,
                         stubbedIMP,
                         method_getTypeEncoding(unstubbedMethod));
@@ -114,48 +208,10 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
     IMP stubbedIMP = imp_implementationWithBlock(block);
     
-    class_replaceMethod([self stubClass],
+    class_replaceMethod(object_getClass(self),
                         stubbedSEL,
                         stubbedIMP,
                         method_getTypeEncoding(class_getInstanceMethod([self class], selector)));
-}
-
-# pragma mark - Private
-
-- (void)stub
-{
-    Class originalClass = [self class];
-    IMP classIMP = imp_implementationWithBlock(^{ return originalClass; });
-    
-    NSString *objectMetaClassName = [NSString stringWithFormat:@"%@%p", NSStringFromClass([self class]), self];
-    Class objectMetaClass = objc_allocateClassPair([self class], [objectMetaClassName UTF8String], 0);
-    if (objectMetaClass) {
-        objc_registerClassPair(objectMetaClass);
-        object_setClass(self, objectMetaClass);
-    }
-    
-    class_addMethod([self class], @selector(class), classIMP, "@@:");
-    objc_setAssociatedObject(self, stubClassKey, objectMetaClass, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-- (Class)stubClass
-{
-    return objc_getAssociatedObject(self, stubClassKey);
-}
-
-- (BOOL)isStubbed
-{
-    return objc_getAssociatedObject(self, stubClassKey) != nil;
-}
-
-- (NSArray *)stubbedMethods
-{
-    return objc_getAssociatedObject(self, stubbedMethodsKey);
-}
-
-- (BOOL)isSelectorStubbed:(SEL)selector
-{
-    return [[self stubbedMethods] containsObject:NSStringFromSelector(selector)];
 }
 
 @end
