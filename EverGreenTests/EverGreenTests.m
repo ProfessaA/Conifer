@@ -173,6 +173,13 @@
               @"unstubbing stubbed object not restoring original behavior");
 }
 
+- (void)testUnstubThrowsErrorForInstanceThatIsNotStubbed
+{
+    TestObject *unstubbed = [TestObject new];
+    XCTAssertThrows([unstubbed unstub],
+                    @"unstubbing instance that was never stubbed did not cause an exception");
+}
+
 - (void)testStubReturnsOriginalClass
 {
     TestObject *stubbed = [TestObject new];

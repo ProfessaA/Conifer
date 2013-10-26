@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
 
+extern NSString * const EverGreenStubException;
+
 @interface NSObject (EverGreen)
 
 - (void)unstub;

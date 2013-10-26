@@ -1,16 +1,12 @@
 #import "NSObject+EverGreen.h"
 #import <objc/runtime.h>
 
+NSString * const EverGreenStubException = @"EverGreenStubException";
+
 const char *stubbedMethodsKey = "stubbedMethods";
 const char *stubClassKey = "stubClass";
 
-SEL unstubbedSelectorForSelector(SEL selector)
-{
-    NSString *selectorString = NSStringFromSelector(selector);
-    selectorString = [selectorString stringByReplacingCharactersInRange:NSMakeRange(0, 1)
-                                                             withString:[[selectorString substringToIndex:1] uppercaseString]];
-    return NSSelectorFromString([@"_unstubbed" stringByAppendingString:selectorString]);
-}
+#pragma mark - Utility Functions
 
 SEL stubbedSelectorForSelector(SEL selector)
 {
@@ -20,11 +16,42 @@ SEL stubbedSelectorForSelector(SEL selector)
     return NSSelectorFromString([@"_stubbed" stringByAppendingString:selectorString]);
 }
 
+id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *signature)
+{
+    SEL stubbedSEL = stubbedSelectorForSelector(selector);
+    return ^void* (id me, ...) {
+        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+        [invocation setSelector:stubbedSEL];
+        
+        va_list args;
+        va_start(args, me);
+        NSUInteger numArguments = [signature numberOfArguments];
+        for (int i = 2; i < numArguments; i++) {
+            void *arg = va_arg(args, void *);
+            [invocation setArgument:&arg atIndex:i];
+        }
+        va_end(args);
+        
+        [invocation invokeWithTarget:me];
+        NSString *retType = [NSString stringWithUTF8String:[signature methodReturnType]];
+        if ([retType isEqualToString:@"v"]) return nil;
+        
+        void *retVal;
+        [invocation getReturnValue:&retVal];
+        return retVal;
+    };
+}
+
+#pragma mark - Implementation
+
 @implementation NSObject (EverGreen)
 
 - (void)unstub
 {
-    if (![self isStubbed]) return;
+    if (![self isStubbed]) {
+        [NSException raise:EverGreenStubException
+                    format:@"You tried to unstub an instance that was never stubbed: %@", self];
+    }
     
     objc_setAssociatedObject(self, stubClassKey, nil, OBJC_ASSOCIATION_ASSIGN);
     objc_setAssociatedObject(self, stubbedMethodsKey, nil, OBJC_ASSOCIATION_ASSIGN);
@@ -49,27 +76,7 @@ SEL stubbedSelectorForSelector(SEL selector)
     class_addMethod([self stubClass], stubbedSEL, defaultStub, methodTypes);
     
     NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:methodTypes];
-    IMP stubImp = imp_implementationWithBlock(^void* (id me, ...) {
-        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-        [invocation setSelector:stubbedSEL];
-        
-        va_list args;
-        va_start(args, me);
-        NSUInteger numArguments = [signature numberOfArguments];
-        for (int i = 2; i < numArguments; i++) {
-            void *arg = va_arg(args, void *);
-            [invocation setArgument:&arg atIndex:i];
-        }
-        va_end(args);
-        
-        [invocation invokeWithTarget:me];
-        NSString *retType = [NSString stringWithUTF8String:[signature methodReturnType]];
-        if ([retType isEqualToString:@"v"]) return nil;
-        
-        void *retVal;
-        [invocation getReturnValue:&retVal];
-        return retVal;
-    });
+    IMP stubImp = imp_implementationWithBlock(stubBlockForSelectorWithMethodSignature(selector, signature));
     
     class_addMethod([self stubClass], selector, stubImp, methodTypes);
 }
@@ -106,12 +113,11 @@ SEL stubbedSelectorForSelector(SEL selector)
     
     SEL stubbedSEL = stubbedSelectorForSelector(selector);
     IMP stubbedIMP = imp_implementationWithBlock(block);
-    SEL unstubbedSEL = unstubbedSelectorForSelector(selector);
     
     class_replaceMethod([self stubClass],
                         stubbedSEL,
                         stubbedIMP,
-                        method_getTypeEncoding(class_getInstanceMethod([self class], unstubbedSEL)));
+                        method_getTypeEncoding(class_getInstanceMethod([self class], selector)));
 }
 
 # pragma mark - Private
