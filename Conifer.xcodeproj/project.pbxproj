@@ -11,11 +11,11 @@
 		95CAF09A18174298009DF006 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF09918174298009DF006 /* XCTest.framework */; };
 		95CAF09B18174298009DF006 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF08B18174298009DF006 /* Foundation.framework */; };
 		95CAF09D18174298009DF006 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF09C18174298009DF006 /* UIKit.framework */; };
-		95CAF0A018174298009DF006 /* libEverGreen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF08818174297009DF006 /* libEverGreen.a */; };
+		95CAF0A018174298009DF006 /* libConifer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95CAF08818174297009DF006 /* libConifer.a */; };
 		95CAF0A618174298009DF006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 95CAF0A418174298009DF006 /* InfoPlist.strings */; };
-		95CAF0A818174298009DF006 /* EverGreenTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0A718174298009DF006 /* EverGreenTests.m */; };
-		95CAF0B3181746CA009DF006 /* NSObject+EverGreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */; };
-		95CAF0B4181746CA009DF006 /* NSObject+EverGreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */; };
+		95CAF0A818174298009DF006 /* ConiferTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0A718174298009DF006 /* ConiferTests.m */; };
+		95CAF0B3181746CA009DF006 /* NSObject+Conifer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */; };
+		95CAF0B4181746CA009DF006 /* NSObject+Conifer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -24,7 +24,7 @@
 			containerPortal = 95CAF08018174297009DF006 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 95CAF08718174297009DF006;
-			remoteInfo = EverGreen;
+			remoteInfo = Conifer;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -41,17 +41,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		95CAF08818174297009DF006 /* libEverGreen.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libEverGreen.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		95CAF08818174297009DF006 /* libConifer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libConifer.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		95CAF08B18174298009DF006 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		95CAF08F18174298009DF006 /* EverGreen-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "EverGreen-Prefix.pch"; sourceTree = "<group>"; };
-		95CAF09818174298009DF006 /* EverGreenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EverGreenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		95CAF08F18174298009DF006 /* Conifer-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Conifer-Prefix.pch"; sourceTree = "<group>"; };
+		95CAF09818174298009DF006 /* ConiferTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ConiferTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		95CAF09918174298009DF006 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		95CAF09C18174298009DF006 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		95CAF0A318174298009DF006 /* EverGreenTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "EverGreenTests-Info.plist"; sourceTree = "<group>"; };
+		95CAF0A318174298009DF006 /* ConiferTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ConiferTests-Info.plist"; sourceTree = "<group>"; };
 		95CAF0A518174298009DF006 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		95CAF0A718174298009DF006 /* EverGreenTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EverGreenTests.m; sourceTree = "<group>"; };
-		95CAF0B1181746CA009DF006 /* NSObject+EverGreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+EverGreen.h"; sourceTree = "<group>"; };
-		95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+EverGreen.m"; sourceTree = "<group>"; };
+		95CAF0A718174298009DF006 /* ConiferTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConiferTests.m; sourceTree = "<group>"; };
+		95CAF0B1181746CA009DF006 /* NSObject+Conifer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+Conifer.h"; sourceTree = "<group>"; };
+		95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Conifer.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,7 +70,7 @@
 				95CAF09A18174298009DF006 /* XCTest.framework in Frameworks */,
 				95CAF09D18174298009DF006 /* UIKit.framework in Frameworks */,
 				95CAF09B18174298009DF006 /* Foundation.framework in Frameworks */,
-				95CAF0A018174298009DF006 /* libEverGreen.a in Frameworks */,
+				95CAF0A018174298009DF006 /* libConifer.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,8 +80,8 @@
 		95CAF07F18174297009DF006 = {
 			isa = PBXGroup;
 			children = (
-				95CAF08D18174298009DF006 /* EverGreen */,
-				95CAF0A118174298009DF006 /* EverGreenTests */,
+				95CAF08D18174298009DF006 /* Conifer */,
+				95CAF0A118174298009DF006 /* ConiferTests */,
 				95CAF08A18174297009DF006 /* Frameworks */,
 				95CAF08918174297009DF006 /* Products */,
 			);
@@ -90,8 +90,8 @@
 		95CAF08918174297009DF006 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				95CAF08818174297009DF006 /* libEverGreen.a */,
-				95CAF09818174298009DF006 /* EverGreenTests.xctest */,
+				95CAF08818174297009DF006 /* libConifer.a */,
+				95CAF09818174298009DF006 /* ConiferTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -106,37 +106,37 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		95CAF08D18174298009DF006 /* EverGreen */ = {
+		95CAF08D18174298009DF006 /* Conifer */ = {
 			isa = PBXGroup;
 			children = (
-				95CAF0B1181746CA009DF006 /* NSObject+EverGreen.h */,
-				95CAF0B2181746CA009DF006 /* NSObject+EverGreen.m */,
+				95CAF0B1181746CA009DF006 /* NSObject+Conifer.h */,
+				95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */,
 				95CAF08E18174298009DF006 /* Supporting Files */,
 			);
-			path = EverGreen;
+			path = Conifer;
 			sourceTree = "<group>";
 		};
 		95CAF08E18174298009DF006 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				95CAF08F18174298009DF006 /* EverGreen-Prefix.pch */,
+				95CAF08F18174298009DF006 /* Conifer-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		95CAF0A118174298009DF006 /* EverGreenTests */ = {
+		95CAF0A118174298009DF006 /* ConiferTests */ = {
 			isa = PBXGroup;
 			children = (
-				95CAF0A718174298009DF006 /* EverGreenTests.m */,
+				95CAF0A718174298009DF006 /* ConiferTests.m */,
 				95CAF0A218174298009DF006 /* Supporting Files */,
 			);
-			path = EverGreenTests;
+			path = ConiferTests;
 			sourceTree = "<group>";
 		};
 		95CAF0A218174298009DF006 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				95CAF0A318174298009DF006 /* EverGreenTests-Info.plist */,
+				95CAF0A318174298009DF006 /* ConiferTests-Info.plist */,
 				95CAF0A418174298009DF006 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
@@ -145,9 +145,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		95CAF08718174297009DF006 /* EverGreen */ = {
+		95CAF08718174297009DF006 /* Conifer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95CAF0AB18174298009DF006 /* Build configuration list for PBXNativeTarget "EverGreen" */;
+			buildConfigurationList = 95CAF0AB18174298009DF006 /* Build configuration list for PBXNativeTarget "Conifer" */;
 			buildPhases = (
 				95CAF08418174297009DF006 /* Sources */,
 				95CAF08518174297009DF006 /* Frameworks */,
@@ -157,14 +157,14 @@
 			);
 			dependencies = (
 			);
-			name = EverGreen;
-			productName = EverGreen;
-			productReference = 95CAF08818174297009DF006 /* libEverGreen.a */;
+			name = Conifer;
+			productName = Conifer;
+			productReference = 95CAF08818174297009DF006 /* libConifer.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		95CAF09718174298009DF006 /* EverGreenTests */ = {
+		95CAF09718174298009DF006 /* ConiferTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95CAF0AE18174298009DF006 /* Build configuration list for PBXNativeTarget "EverGreenTests" */;
+			buildConfigurationList = 95CAF0AE18174298009DF006 /* Build configuration list for PBXNativeTarget "ConiferTests" */;
 			buildPhases = (
 				95CAF09418174298009DF006 /* Sources */,
 				95CAF09518174298009DF006 /* Frameworks */,
@@ -175,9 +175,9 @@
 			dependencies = (
 				95CAF09F18174298009DF006 /* PBXTargetDependency */,
 			);
-			name = EverGreenTests;
-			productName = EverGreenTests;
-			productReference = 95CAF09818174298009DF006 /* EverGreenTests.xctest */;
+			name = ConiferTests;
+			productName = ConiferTests;
+			productReference = 95CAF09818174298009DF006 /* ConiferTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -189,7 +189,7 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "Aaron Levine";
 			};
-			buildConfigurationList = 95CAF08318174297009DF006 /* Build configuration list for PBXProject "EverGreen" */;
+			buildConfigurationList = 95CAF08318174297009DF006 /* Build configuration list for PBXProject "Conifer" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -201,8 +201,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				95CAF08718174297009DF006 /* EverGreen */,
-				95CAF09718174298009DF006 /* EverGreenTests */,
+				95CAF08718174297009DF006 /* Conifer */,
+				95CAF09718174298009DF006 /* ConiferTests */,
 			);
 		};
 /* End PBXProject section */
@@ -223,7 +223,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95CAF0B3181746CA009DF006 /* NSObject+EverGreen.m in Sources */,
+				95CAF0B3181746CA009DF006 /* NSObject+Conifer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,8 +231,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95CAF0A818174298009DF006 /* EverGreenTests.m in Sources */,
-				95CAF0B4181746CA009DF006 /* NSObject+EverGreen.m in Sources */,
+				95CAF0A818174298009DF006 /* ConiferTests.m in Sources */,
+				95CAF0B4181746CA009DF006 /* NSObject+Conifer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,7 +241,7 @@
 /* Begin PBXTargetDependency section */
 		95CAF09F18174298009DF006 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 95CAF08718174297009DF006 /* EverGreen */;
+			target = 95CAF08718174297009DF006 /* Conifer */;
 			targetProxy = 95CAF09E18174298009DF006 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -331,11 +331,11 @@
 		95CAF0AC18174298009DF006 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DSTROOT = /tmp/EverGreen.dst;
+				DSTROOT = /tmp/Conifer.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "EverGreen/EverGreen-Prefix.pch";
+				GCC_PREFIX_HEADER = "Conifer/Conifer-Prefix.pch";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Conifer;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -343,11 +343,11 @@
 		95CAF0AD18174298009DF006 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DSTROOT = /tmp/EverGreen.dst;
+				DSTROOT = /tmp/Conifer.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "EverGreen/EverGreen-Prefix.pch";
+				GCC_PREFIX_HEADER = "Conifer/Conifer-Prefix.pch";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Conifer;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -362,13 +362,13 @@
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "EverGreen/EverGreen-Prefix.pch";
+				GCC_PREFIX_HEADER = "Conifer/Conifer-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = "EverGreenTests/EverGreenTests-Info.plist";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				INFOPLIST_FILE = "ConiferTests/ConiferTests-Info.plist";
+				PRODUCT_NAME = ConiferTests;
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
@@ -383,9 +383,9 @@
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "EverGreen/EverGreen-Prefix.pch";
-				INFOPLIST_FILE = "EverGreenTests/EverGreenTests-Info.plist";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				GCC_PREFIX_HEADER = "Conifer/Conifer-Prefix.pch";
+				INFOPLIST_FILE = "ConiferTests/ConiferTests-Info.plist";
+				PRODUCT_NAME = ConiferTests;
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Release;
@@ -393,7 +393,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		95CAF08318174297009DF006 /* Build configuration list for PBXProject "EverGreen" */ = {
+		95CAF08318174297009DF006 /* Build configuration list for PBXProject "Conifer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95CAF0A918174298009DF006 /* Debug */,
@@ -402,21 +402,23 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		95CAF0AB18174298009DF006 /* Build configuration list for PBXNativeTarget "EverGreen" */ = {
+		95CAF0AB18174298009DF006 /* Build configuration list for PBXNativeTarget "Conifer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95CAF0AC18174298009DF006 /* Debug */,
 				95CAF0AD18174298009DF006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
-		95CAF0AE18174298009DF006 /* Build configuration list for PBXNativeTarget "EverGreenTests" */ = {
+		95CAF0AE18174298009DF006 /* Build configuration list for PBXNativeTarget "ConiferTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95CAF0AF18174298009DF006 /* Debug */,
 				95CAF0B018174298009DF006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

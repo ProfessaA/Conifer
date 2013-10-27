@@ -1,5 +1,5 @@
 #import <XCTest/XCTest.h>
-#import "NSObject+EverGreen.h"
+#import "NSObject+Conifer.h"
 #import <objc/message.h>
 
 @interface TestObject : NSObject
@@ -37,7 +37,7 @@
 
 @end
 
-@interface EverGreenTests : XCTestCase
+@interface ConiferTests : XCTestCase
 
 @property (nonatomic, strong) TestObject *stubbed;
 @property (nonatomic, strong) TestObject *anotherStubbedObject;
@@ -45,7 +45,7 @@
 
 @end
 
-@implementation EverGreenTests
+@implementation ConiferTests
 
 - (void)setUp
 {

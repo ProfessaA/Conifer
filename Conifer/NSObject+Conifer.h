@@ -1,8 +1,8 @@
 #import <Foundation/Foundation.h>
 
-extern NSString * const EverGreenStubException;
+extern NSString * const ConiferStubException;
 
-@interface NSObject (EverGreen)
+@interface NSObject (Conifer)
 
 - (BOOL)isStubbingMethod:(SEL)selector;
 
@@ -20,7 +20,7 @@ extern NSString * const EverGreenStubException;
 
 @end
 
-@interface NSObject (EverGreenClassMethods)
+@interface NSObject (ConiferClassMethods)
 
 + (BOOL)isStubbingMethod:(SEL)selector;
 

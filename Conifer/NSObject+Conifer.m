@@ -1,8 +1,8 @@
-#import "NSObject+EverGreen.h"
+#import "NSObject+Conifer.h"
 #import <objc/runtime.h>
 #import <objc/message.h>
 
-NSString * const EverGreenStubException = @"EverGreenStubException";
+NSString * const ConiferStubException = @"ConiferStubException";
 
 const char *stubbedMethodsKey = "stubbedMethodsKey";
 const char *isStubbedKey = "isStubbedKey";
@@ -43,7 +43,7 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
     };
 }
 
-@implementation NSObject (EverGreen)
+@implementation NSObject (Conifer)
 
 #pragma mark - Querying Stubbed Objects
 
@@ -101,7 +101,7 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
 - (void)unstub
 {
     if (![self isStubbingMethods]) {
-        [NSException raise:EverGreenStubException
+        [NSException raise:ConiferStubException
                     format:@"You tried to unstub an instance that was never stubbed: %@", self];
     }
     
@@ -165,7 +165,7 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
 {
     NSString *objectMetaClassName = [NSString stringWithFormat:@"%@%p", NSStringFromClass([self class]), self];
     Class objectMetaClass = objc_allocateClassPair(object_getClass(self), [objectMetaClassName UTF8String], 0);
-    if (!objectMetaClass) [NSException raise:EverGreenStubException format:@"an error occurred when attempting to stub %@", self];
+    if (!objectMetaClass) [NSException raise:ConiferStubException format:@"an error occurred when attempting to stub %@", self];
     
     objc_registerClassPair(objectMetaClass);
     object_setClass(self, objectMetaClass);
