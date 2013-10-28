@@ -62,6 +62,7 @@
     if ([self.anotherStubbedObject isStubbingMethods]) [self.anotherStubbedObject unstub];
 
     if ([TestObject isStubbingMethods]) [TestObject unstub];
+    if ([TestObject isStubbingAnyInstanceMethods]) [TestObject anyInstanceUnstub];
     
     [super tearDown];
 }
@@ -288,6 +289,41 @@
     
     XCTAssert([self.unstubbed class] == [TestObject class],
               @"+class does not return same value as unstubbed instance -class");
+}
+
+- (void)testStubbingAnyInstance
+{
+    [TestObject anyInstanceStub:@selector(repeatString:times:)];
+    
+    XCTAssert([self.unstubbed repeatString:@"blah" times:100] == nil,
+              @"Any instance stub did not work");
+    
+    XCTAssertTrue([TestObject isStubbingAnyInstanceMethods],
+                  @"anyInstance stubs not reported");
+    XCTAssertFalse([TestObject isStubbingAnyInstanceMethod:@selector(intRetVal)],
+                   @"anyInstance stubs not reported");
+    XCTAssertTrue([TestObject isStubbingAnyInstanceMethod:@selector(repeatString:times:)],
+                  @"anyInstance stubs not reported");
+}
+
+- (void)testUnstubbingOneAnyInstanceMethod
+{
+    [TestObject anyInstanceStub:@selector(repeatString:times:)];
+    [TestObject anyInstanceUnstub:@selector(repeatString:times:)];
+    
+    XCTAssert([[self.unstubbed repeatString:@"*" times:1] isEqualToString:@"*"],
+              @"Any instance unstub did not work");
+    XCTAssertFalse([TestObject isStubbingAnyInstanceMethod:@selector(repeatString:times:)],
+                   @"Did not remove selector from the list of stubbed methods");
+}
+
+- (void)testUnstubbingAllAnyInstanceMethods
+{
+    [TestObject anyInstanceStub:@selector(repeatString:times:)];
+    [TestObject anyInstanceUnstub];
+    
+    XCTAssert([[self.unstubbed repeatString:@"*" times:1] isEqualToString:@"*"],
+              @"Any instance unstub did not work");
 }
 
 @end

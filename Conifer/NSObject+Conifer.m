@@ -4,6 +4,7 @@
 
 NSString * const ConiferStubException = @"ConiferStubException";
 
+const char *anyInstanceStubbedMethodsKey = "anyInstanceStubbedMethodsKey";
 const char *stubbedMethodsKey = "stubbedMethodsKey";
 const char *isStubbedKey = "isStubbedKey";
 
@@ -15,6 +16,14 @@ SEL stubbedSelectorForSelector(SEL selector)
     selectorString = [selectorString stringByReplacingCharactersInRange:NSMakeRange(0, 1)
                                                              withString:[[selectorString substringToIndex:1] uppercaseString]];
     return NSSelectorFromString([@"_stubbed" stringByAppendingString:selectorString]);
+}
+
+SEL originalMethodSelectorForSelector(SEL selector)
+{
+    NSString *selectorString = NSStringFromSelector(selector);
+    selectorString = [selectorString stringByReplacingCharactersInRange:NSMakeRange(0, 1)
+                                                             withString:[[selectorString substringToIndex:1] uppercaseString]];
+    return NSSelectorFromString([@"_original" stringByAppendingString:selectorString]);
 }
 
 id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *signature)
@@ -43,7 +52,72 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
     };
 }
 
+void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceClass, Class destinationClass)
+{
+    Method originalMethod = class_getInstanceMethod(sourceClass, selector);
+    const char *methodTypes = method_getTypeEncoding(originalMethod);
+    
+    SEL stubbedSEL = stubbedSelectorForSelector(selector);
+    IMP defaultStub = imp_implementationWithBlock(^ { return nil; });
+    class_addMethod(destinationClass, stubbedSEL, defaultStub, methodTypes);
+    
+    NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:methodTypes];
+    IMP stubIMP = imp_implementationWithBlock(stubBlockForSelectorWithMethodSignature(selector, signature));
+    class_replaceMethod(destinationClass, selector, stubIMP, methodTypes);
+}
+
 @implementation NSObject (Conifer)
+
+#pragma mark - Stubbing Any Instance
+
++ (BOOL)isStubbingAnyInstanceMethods
+{
+    return [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) count] > 0;
+}
+
++ (BOOL)isStubbingAnyInstanceMethod:(SEL)selector
+{
+    return [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) containsObject:NSStringFromSelector(selector)];
+}
+
++ (void)anyInstanceUnstub
+{
+    NSMutableArray *anyInstanceStubbedMethods = [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) copy];
+    for (NSString *selectorString in anyInstanceStubbedMethods) {
+        [self anyInstanceUnstub:NSSelectorFromString(selectorString)];
+    }
+}
+
++ (void)anyInstanceUnstub:(SEL)selector
+{
+    SEL originalMethodSEL = originalMethodSelectorForSelector(selector);
+    Method originalMethod = class_getInstanceMethod(self, originalMethodSEL);
+    const char *methodTypes = method_getTypeEncoding(originalMethod);
+    
+    class_replaceMethod(self, selector, method_getImplementation(originalMethod), methodTypes);
+    
+    NSMutableArray *anyInstanceStubbedMethods = [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) mutableCopy];
+    [anyInstanceStubbedMethods removeObject:NSStringFromSelector(selector)];
+    objc_setAssociatedObject(self,
+                             anyInstanceStubbedMethodsKey,
+                             [NSArray arrayWithArray:anyInstanceStubbedMethods],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
++ (void)anyInstanceStub:(SEL)selector
+{
+    Method originalMethod = class_getInstanceMethod(self, selector);
+    const char *methodTypes = method_getTypeEncoding(originalMethod);
+    class_addMethod(self, originalMethodSelectorForSelector(selector), method_getImplementation(originalMethod), methodTypes);
+    
+    stubSelectorFromSourceClassOnDestinationClass(selector, self, self);
+    
+    NSArray *anyInstanceStubbedMethods = objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey);
+    objc_setAssociatedObject(self,
+                             anyInstanceStubbedMethodsKey,
+                             [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:anyInstanceStubbedMethods],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 
 #pragma mark - Querying Stubbed Objects
 
@@ -69,17 +143,9 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
                              [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
-    Method originalMethod = class_getInstanceMethod(class_getSuperclass(object_getClass(self)), selector);
-    const char *methodTypes = method_getTypeEncoding(originalMethod);
-    
-    SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    IMP defaultStub = imp_implementationWithBlock(^(id me, ...) { return nil; });
-    class_addMethod(object_getClass(self), stubbedSEL, defaultStub, methodTypes);
-    
-    NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:methodTypes];
-    IMP stubImp = imp_implementationWithBlock(stubBlockForSelectorWithMethodSignature(selector, signature));
-    
-    class_addMethod(object_getClass(self), selector, stubImp, methodTypes);
+    stubSelectorFromSourceClassOnDestinationClass(selector,
+                                                  class_getSuperclass(object_getClass(self)),
+                                                  object_getClass(self));
 }
 
 + (void)_stub
