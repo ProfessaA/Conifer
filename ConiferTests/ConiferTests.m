@@ -99,14 +99,14 @@
 
 - (void)testStubbingAndCallingThrough
 {
-    [self.stubbed stubAndCallThrough:@selector(repeatString:times:)];
+    [[self.stubbed stub:@selector(repeatString:times:)] andCallThrough];
     XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"**"],
               @"stub and call through not returning original value");
 }
 
 - (void)testStubbingAndReturningObject
 {
-    [self.stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
+    [[self.stubbed stub:@selector(repeatString:times:)] andReturn:@"fake"];
     
     XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
               @"stub and return not properly returning given object");
@@ -114,7 +114,7 @@
 
 - (void)testStubbingAndReturningPrimitive
 {
-    [self.stubbed stub:@selector(intRetVal) andReturn:(void *)32];
+    [[self.stubbed stub:@selector(intRetVal)] andReturn:(void *)32];
     
     XCTAssert([self.stubbed intRetVal] == 32,
               @"stub and return not properly returning given primitive");
@@ -122,8 +122,8 @@
 
 - (void)testStubbingDoesNotAffectUnstubbedMethods
 {
-    [self.stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
-    [self.anotherStubbedObject stub:@selector(intRetVal) andReturn:(void *)1000];
+    [[self.stubbed stub:@selector(repeatString:times:)] andReturn:@"fake"];
+    [[self.anotherStubbedObject stub:@selector(intRetVal)] andReturn:(void *)1000];
     
     XCTAssert([[self.anotherStubbedObject repeatString:@"*" times:2] isEqualToString:@"**"],
               @"unstubbed method returning stubbed value from other instance");
@@ -134,8 +134,8 @@
 
 - (void)testStubbingIsInstanceIndependent
 {
-    [self.stubbed stub:@selector(repeatString:times:) andReturn:@"fake"];
-    [self.anotherStubbedObject stub:@selector(repeatString:times:) andReturn:@"faker"];
+    [[self.stubbed stub:@selector(repeatString:times:)] andReturn:@"fake"];
+    [[self.anotherStubbedObject stub:@selector(repeatString:times:)] andReturn:@"faker"];
     
     XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"fake"],
               @"stubbed value affected by stub on different instance");
@@ -146,7 +146,7 @@
 
 - (void)testStubbingAndCallingFake
 {
-    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
+    [[self.stubbed stub:@selector(repeatString:times:)] andCallFake:
      ^NSString* (TestObject *me, NSString *string, NSUInteger times) {
          return @"fake";
      }];
@@ -157,7 +157,7 @@
 
 - (void)testStubbingAndCallingFakeWithIncompleteArguments
 {
-    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
+    [[self.stubbed stub:@selector(repeatString:times:)] andCallFake:
      ^{
          return @"no args";
      }];
@@ -165,7 +165,7 @@
               @"stub and call fake with block with no arguments failed");
     
     
-    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
+    [[self.stubbed stub:@selector(repeatString:times:)] andCallFake:
      ^id (TestObject *me) {
          return me;
      }];
@@ -176,7 +176,7 @@
 
 - (void)testUnstub
 {
-    [self.stubbed stub:@selector(repeatString:times:) andCallFake:
+    [[self.stubbed stub:@selector(repeatString:times:)] andCallFake:
      ^NSString* (TestObject *me, NSString *string, NSUInteger times) {
          return @"fake";
      }];
@@ -203,7 +203,7 @@
 
 - (void)testStubReturnsOriginalClass
 {
-    [self.stubbed stub:@selector(intRetVal) andReturn:(void *)1000];
+    [[self.stubbed stub:@selector(intRetVal)] andReturn:(void *)1000];
     
     XCTAssert([self.stubbed class] == [TestObject class],
               @"stubbed object doesn't return original class");
@@ -245,21 +245,21 @@
 - (void)testClassMethodStubbingAndCallingThrough
 {
     NSString *originalReturnValue = [TestObject classMethod];
-    [TestObject stubAndCallThrough:@selector(classMethod)];
+    [[TestObject stub:@selector(classMethod)] andCallThrough];
     XCTAssert([[TestObject classMethod] isEqualToString:originalReturnValue],
               @"stub and call through not returning original value");
 }
 
 - (void)testClassMethodStubbingAndReturning
 {
-    [TestObject stub:@selector(classMethod) andReturn:@"faked out"];
+    [[TestObject stub:@selector(classMethod)] andReturn:@"faked out"];
     XCTAssert([[TestObject classMethod] isEqualToString:@"faked out"],
               @"stub andReturn not returning given value");
 }
 
 - (void)testClassMethodStubbingAndCallingFake
 {
-    [TestObject stub:@selector(classMethod) andCallFake:^NSString* (id me){
+    [[TestObject stub:@selector(classMethod)] andCallFake:^NSString* (id me){
         return [NSString stringWithFormat:@"%@ fake", NSStringFromClass(me)];
     }];
     

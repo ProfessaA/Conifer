@@ -16,6 +16,8 @@
 		95CAF0A818174298009DF006 /* ConiferTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0A718174298009DF006 /* ConiferTests.m */; };
 		95CAF0B3181746CA009DF006 /* NSObject+Conifer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */; };
 		95CAF0B4181746CA009DF006 /* NSObject+Conifer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */; };
+		95E0244C18236F5200DDD4F6 /* CONStub.m in Sources */ = {isa = PBXBuildFile; fileRef = 95E0244B18236F5200DDD4F6 /* CONStub.m */; };
+		95E0244D18236F5200DDD4F6 /* CONStub.m in Sources */ = {isa = PBXBuildFile; fileRef = 95E0244B18236F5200DDD4F6 /* CONStub.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +54,8 @@
 		95CAF0A718174298009DF006 /* ConiferTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConiferTests.m; sourceTree = "<group>"; };
 		95CAF0B1181746CA009DF006 /* NSObject+Conifer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+Conifer.h"; sourceTree = "<group>"; };
 		95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Conifer.m"; sourceTree = "<group>"; };
+		95E0244A18236F5200DDD4F6 /* CONStub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CONStub.h; sourceTree = "<group>"; };
+		95E0244B18236F5200DDD4F6 /* CONStub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CONStub.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +113,8 @@
 		95CAF08D18174298009DF006 /* Conifer */ = {
 			isa = PBXGroup;
 			children = (
+				95E0244A18236F5200DDD4F6 /* CONStub.h */,
+				95E0244B18236F5200DDD4F6 /* CONStub.m */,
 				95CAF0B1181746CA009DF006 /* NSObject+Conifer.h */,
 				95CAF0B2181746CA009DF006 /* NSObject+Conifer.m */,
 				95CAF08E18174298009DF006 /* Supporting Files */,
@@ -223,6 +229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95E0244C18236F5200DDD4F6 /* CONStub.m in Sources */,
 				95CAF0B3181746CA009DF006 /* NSObject+Conifer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -233,6 +240,7 @@
 			files = (
 				95CAF0A818174298009DF006 /* ConiferTests.m in Sources */,
 				95CAF0B4181746CA009DF006 /* NSObject+Conifer.m in Sources */,
+				95E0244D18236F5200DDD4F6 /* CONStub.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

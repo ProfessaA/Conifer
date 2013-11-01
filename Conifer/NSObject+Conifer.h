@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import "CONStub.h"
 
 extern NSString * const ConiferStubException;
 
@@ -24,13 +25,7 @@ extern NSString * const ConiferStubException;
 
 - (void)unstub;
 
-- (void)stub:(SEL)selector;
-
-- (void)stubAndCallThrough:(SEL)selector;
-
-- (void)stub:(SEL)selector andReturn:(void *)returnValue;
-
-- (void)stub:(SEL)selector andCallFake:(id)block;
+- (CONStub *)stub:(SEL)selector;
 
 @end
 
@@ -42,12 +37,6 @@ extern NSString * const ConiferStubException;
 
 + (void)unstub;
 
-+ (void)stub:(SEL)selector;
-
-+ (void)stubAndCallThrough:(SEL)selector;
-
-+ (void)stub:(SEL)selector andReturn:(void *)returnValue;
-
-+ (void)stub:(SEL)selector andCallFake:(id)block;
++ (CONStub *)stub:(SEL)selector;
 
 @end

@@ -133,19 +133,25 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
 
 #pragma mark - Creating Initial Stub
 
-- (void)stub:(SEL)selector
+- (CONStub *)stub:(SEL)selector
 {
-    if ([self isStubbingMethod:selector]) return;
-    if (![self isStubbingMethods]) [self _stub];
+    if (![self isStubbingMethod:selector]) {
+        if (![self isStubbingMethods]) [self _stub];
+        
+        objc_setAssociatedObject(self,
+                                 stubbedMethodsKey,
+                                 [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        
+        stubSelectorFromSourceClassOnDestinationClass(selector,
+                                                      class_getSuperclass(object_getClass(self)),
+                                                      object_getClass(self));
+        
+    }
     
-    objc_setAssociatedObject(self,
-                             stubbedMethodsKey,
-                             [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    
-    stubSelectorFromSourceClassOnDestinationClass(selector,
-                                                  class_getSuperclass(object_getClass(self)),
-                                                  object_getClass(self));
+    return [[CONStub alloc] initWithObject:self
+                          originalSelector:selector
+                              stubSelector:stubbedSelectorForSelector(selector)];
 }
 
 + (void)_stub
@@ -177,47 +183,6 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     
     objc_setAssociatedObject(self, isStubbedKey, nil, OBJC_ASSOCIATION_ASSIGN);
     objc_setAssociatedObject(self, stubbedMethodsKey, nil, OBJC_ASSOCIATION_ASSIGN);
-}
-
-#pragma mark - Changing Return Value Of Stub
-
-- (void)stubAndCallThrough:(SEL)selector
-{
-    [self stub:selector];
-    SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    Method unstubbedMethod = class_getInstanceMethod(class_getSuperclass(object_getClass(self)), selector);
-    
-    class_replaceMethod(object_getClass(self),
-                        stubbedSEL,
-                        method_getImplementation(unstubbedMethod),
-                        method_getTypeEncoding(unstubbedMethod));
-}
-
-- (void)stub:(SEL)selector andReturn:(void *)returnValue
-{
-    [self stub:selector];
-    
-    SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    IMP stubbedIMP = imp_implementationWithBlock(^{ return returnValue; });
-    Method unstubbedMethod = class_getInstanceMethod([self class], selector);
-    
-    class_replaceMethod(object_getClass(self),
-                        stubbedSEL,
-                        stubbedIMP,
-                        method_getTypeEncoding(unstubbedMethod));
-}
-
-- (void)stub:(SEL)selector andCallFake:(id)block
-{
-    [self stub:selector];
-    
-    SEL stubbedSEL = stubbedSelectorForSelector(selector);
-    IMP stubbedIMP = imp_implementationWithBlock(block);
-    
-    class_replaceMethod(object_getClass(self),
-                        stubbedSEL,
-                        stubbedIMP,
-                        method_getTypeEncoding(class_getInstanceMethod([self class], selector)));
 }
 
 # pragma mark - Private
