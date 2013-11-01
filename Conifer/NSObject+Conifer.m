@@ -4,7 +4,6 @@
 
 NSString * const ConiferStubException = @"ConiferStubException";
 
-const char *anyInstanceStubbedMethodsKey = "anyInstanceStubbedMethodsKey";
 const char *stubbedMethodsKey = "stubbedMethodsKey";
 const char *isStubbedKey = "isStubbedKey";
 
@@ -67,57 +66,6 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
 }
 
 @implementation NSObject (Conifer)
-
-#pragma mark - Stubbing Any Instance
-
-+ (BOOL)isStubbingAnyInstanceMethods
-{
-    return [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) count] > 0;
-}
-
-+ (BOOL)isStubbingAnyInstanceMethod:(SEL)selector
-{
-    return [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) containsObject:NSStringFromSelector(selector)];
-}
-
-+ (void)anyInstanceUnstub
-{
-    NSMutableArray *anyInstanceStubbedMethods = [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) copy];
-    for (NSString *selectorString in anyInstanceStubbedMethods) {
-        [self anyInstanceUnstub:NSSelectorFromString(selectorString)];
-    }
-}
-
-+ (void)anyInstanceUnstub:(SEL)selector
-{
-    SEL originalMethodSEL = originalMethodSelectorForSelector(selector);
-    Method originalMethod = class_getInstanceMethod(self, originalMethodSEL);
-    const char *methodTypes = method_getTypeEncoding(originalMethod);
-    
-    class_replaceMethod(self, selector, method_getImplementation(originalMethod), methodTypes);
-    
-    NSMutableArray *anyInstanceStubbedMethods = [objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey) mutableCopy];
-    [anyInstanceStubbedMethods removeObject:NSStringFromSelector(selector)];
-    objc_setAssociatedObject(self,
-                             anyInstanceStubbedMethodsKey,
-                             [NSArray arrayWithArray:anyInstanceStubbedMethods],
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-+ (void)anyInstanceStub:(SEL)selector
-{
-    Method originalMethod = class_getInstanceMethod(self, selector);
-    const char *methodTypes = method_getTypeEncoding(originalMethod);
-    class_addMethod(self, originalMethodSelectorForSelector(selector), method_getImplementation(originalMethod), methodTypes);
-    
-    stubSelectorFromSourceClassOnDestinationClass(selector, self, self);
-    
-    NSArray *anyInstanceStubbedMethods = objc_getAssociatedObject(self, anyInstanceStubbedMethodsKey);
-    objc_setAssociatedObject(self,
-                             anyInstanceStubbedMethodsKey,
-                             [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:anyInstanceStubbedMethods],
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
 
 #pragma mark - Querying Stubbed Objects
 
