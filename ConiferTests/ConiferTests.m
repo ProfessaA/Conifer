@@ -15,6 +15,11 @@
     return @"just a run of the mill class method";
 }
 
++ (NSString *)classMethodWithArg:(NSString *)arg
+{
+    return @"just a run of the mill class method";
+}
+
 - (NSString *)repeatString:(NSString *)string times:(NSUInteger)times
 {
     NSMutableString *repeatedString = [@"" mutableCopy];
@@ -224,6 +229,21 @@
                   @"instance not stubbing method returning true for isStubbingMethod");
 }
 
+- (void)testInstancesCanBeStubbedWithValues
+{
+    [[self.stubbed stub:@selector(repeatString:times:) with:@"*", 1] andReturn:@"whaaaat?"];
+    [[self.stubbed stub:@selector(repeatString:times:) with:@"*", 2] andReturn:@"no waaaaay!"];
+    
+    XCTAssert([[self.stubbed repeatString:@"*" times:1] isEqualToString:@"whaaaat?"],
+              @"instance not stubbed for arguments");
+    
+    XCTAssert([[self.stubbed repeatString:@"*" times:2] isEqualToString:@"no waaaaay!"],
+              @"instance does not support multiple with stubs");
+    
+    XCTAssertThrows([self.stubbed repeatString:@"*" times:3],
+                    @"stub did not throw when called with incorrect arguments");
+}
+
 - (void)testClassMethodsCanBeStubbed
 {
     [TestObject stub:@selector(classMethod)];
@@ -289,5 +309,21 @@
     XCTAssert([self.unstubbed class] == [TestObject class],
               @"+class does not return same value as unstubbed instance -class");
 }
+
+- (void)testClassesCanBeStubbedWithValues
+{
+    [[TestObject stub:@selector(classMethodWithArg:) with:@"first"] andReturn:@"whaaaat?"];
+    [[TestObject stub:@selector(classMethodWithArg:) with:@"second"] andReturn:@"no waaaaay!"];
+    
+    XCTAssert([[TestObject classMethodWithArg:@"first"] isEqualToString:@"whaaaat?"],
+              @"instance not stubbed for arguments");
+    
+    XCTAssert([[TestObject classMethodWithArg:@"second"] isEqualToString:@"no waaaaay!"],
+              @"instance not stubbed for arguments");
+    
+    XCTAssertThrows([TestObject classMethodWithArg:@""],
+                    @"stub did not throw when called with incorrect arguments");
+}
+
 
 @end

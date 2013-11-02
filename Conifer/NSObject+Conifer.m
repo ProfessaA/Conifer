@@ -4,8 +4,9 @@
 
 NSString * const ConiferStubException = @"ConiferStubException";
 
-const char *stubbedMethodsKey = "stubbedMethodsKey";
-const char *isStubbedKey = "isStubbedKey";
+static const char *stubbedMethodsKey = "stubbedMethodsKey";
+static const char *isStubbedKey = "isStubbedKey";
+static const char *withArgumentsKey = "withArgumentsKey";
 
 #pragma mark - Helper Functions
 
@@ -17,12 +18,25 @@ SEL stubbedSelectorForSelector(SEL selector)
     return NSSelectorFromString([@"_stubbed" stringByAppendingString:selectorString]);
 }
 
+SEL stubbedSelectorForSelectorWithArgumentsIndex(SEL selector, NSUInteger withArgumentsIndex)
+{
+    NSString *selectorString = NSStringFromSelector(selector);
+    selectorString = [selectorString stringByReplacingCharactersInRange:NSMakeRange(0, 1)
+                                                             withString:[[selectorString substringToIndex:1] uppercaseString]];
+    return NSSelectorFromString([@"_stubbed" stringByAppendingFormat:@"_%d_%@", withArgumentsIndex, selectorString]);
+}
+
 SEL originalMethodSelectorForSelector(SEL selector)
 {
     NSString *selectorString = NSStringFromSelector(selector);
     selectorString = [selectorString stringByReplacingCharactersInRange:NSMakeRange(0, 1)
                                                              withString:[[selectorString substringToIndex:1] uppercaseString]];
     return NSSelectorFromString([@"_original" stringByAppendingString:selectorString]);
+}
+
+NSMutableArray * withArgumentsArray(id me)
+{
+    return objc_getAssociatedObject(me, withArgumentsKey);
 }
 
 id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *signature)
@@ -32,22 +46,38 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
         NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
         [invocation setSelector:stubbedSEL];
         
+        NSMutableArray *receivedArguments = [@[] mutableCopy];
+        
         va_list args;
         va_start(args, me);
         NSUInteger numArguments = [signature numberOfArguments];
         for (int i = 2; i < numArguments; i++) {
             void *arg = va_arg(args, void *);
             [invocation setArgument:&arg atIndex:i];
+            [receivedArguments addObject:[NSValue value:&arg
+                                           withObjCType:[signature getArgumentTypeAtIndex:i]]];
         }
         va_end(args);
         
+        if (withArgumentsArray(me).count) {
+            __block NSUInteger matchedArgumentsIndex = NSNotFound;
+            [withArgumentsArray(me) enumerateObjectsUsingBlock:^(NSArray *withArguments, NSUInteger idx, BOOL *stop) {
+                if ([receivedArguments isEqual:withArguments]) {
+                    matchedArgumentsIndex = idx;
+                    *stop = YES;
+                }
+            }];
+            
+            if (matchedArgumentsIndex != NSNotFound) {
+                [invocation setSelector:stubbedSelectorForSelectorWithArgumentsIndex(selector, matchedArgumentsIndex)];
+            }
+        }
+        
         [invocation invokeWithTarget:me];
-        NSString *retType = [NSString stringWithUTF8String:[signature methodReturnType]];
-        if ([retType isEqualToString:@"v"]) return nil;
         
         void *retVal;
         [invocation getReturnValue:&retVal];
-        return retVal;
+        return strcmp([signature methodReturnType], "v") == 0 ? nil : retVal;
     };
 }
 
@@ -116,6 +146,46 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     class_addMethod(object_getClass(self), @selector(class), classIMP, "@@:");
 }
 
+- (CONStub *)stub:(SEL)selector with:(void *)firstArgument, ...
+{
+    CONStub *defaultStub = [self stub:selector];
+    Class stubClass = object_getClass(self);
+    Class originalClass = class_getSuperclass(stubClass);
+    
+    Method originalMethod = class_getInstanceMethod(originalClass, selector);
+    NSMethodSignature *signature = [NSMethodSignature signatureWithObjCTypes:method_getTypeEncoding(originalMethod)];
+    
+    NSMutableArray *withArguments = [@[] mutableCopy];
+    va_list args;
+    va_start(args, firstArgument);
+    [withArguments addObject:[NSValue value:&firstArgument
+                               withObjCType:[signature getArgumentTypeAtIndex:2]]];
+
+    NSUInteger numArguments = [signature numberOfArguments];
+    for (int i = 3; i < numArguments; i++) {
+        void *arg = va_arg(args, void *);
+        [withArguments addObject:[NSValue value:&arg
+                                   withObjCType:[signature getArgumentTypeAtIndex:i]]];
+    }
+    va_end(args);
+    
+    NSUInteger withArgIndex = withArgumentsArray(self).count;
+    [withArgumentsArray(self) addObject:withArguments];
+    
+    [defaultStub andCallFake:^{
+        [NSException raise:@"Unexpected arguments" format:@"%@", NSStringFromSelector(selector)];
+        return nil;
+    }];
+    
+    CONStub *withArgumentsStub = [[CONStub alloc] initWithObject:self
+                                                originalSelector:selector
+                                                    stubSelector:stubbedSelectorForSelectorWithArgumentsIndex(selector, withArgIndex)];
+    
+    [withArgumentsStub andCallFake:^{ return nil; }];
+    
+    return withArgumentsStub;
+}
+
 #pragma mark - Unstubbing
 
 - (void)unstub
@@ -149,6 +219,7 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     objc_registerClassPair(objectMetaClass);
     object_setClass(self, objectMetaClass);
     objc_setAssociatedObject(self, isStubbedKey, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, withArgumentsKey, [@[] mutableCopy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 @end
