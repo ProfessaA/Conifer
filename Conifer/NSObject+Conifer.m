@@ -116,10 +116,7 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     if (![self isStubbingMethod:selector]) {
         if (![self isStubbingMethods]) [self _stub];
         
-        objc_setAssociatedObject(self,
-                                 stubbedMethodsKey,
-                                 [@[NSStringFromSelector(selector)] arrayByAddingObjectsFromArray:[self stubbedMethods]],
-                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        [[self stubbedMethods] addObject:NSStringFromSelector(selector)];
         
         stubSelectorFromSourceClassOnDestinationClass(selector,
                                                       class_getSuperclass(object_getClass(self)),
@@ -201,11 +198,12 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     
     objc_setAssociatedObject(self, isStubbedKey, nil, OBJC_ASSOCIATION_ASSIGN);
     objc_setAssociatedObject(self, stubbedMethodsKey, nil, OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(self, withArgumentsKey, nil, OBJC_ASSOCIATION_ASSIGN);
 }
 
 # pragma mark - Private
 
-- (NSArray *)stubbedMethods
+- (NSMutableArray *)stubbedMethods
 {
     return objc_getAssociatedObject(self, stubbedMethodsKey);
 }
@@ -219,6 +217,7 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     objc_registerClassPair(objectMetaClass);
     object_setClass(self, objectMetaClass);
     objc_setAssociatedObject(self, isStubbedKey, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, stubbedMethodsKey, [@[] mutableCopy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(self, withArgumentsKey, [@[] mutableCopy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
