@@ -83,9 +83,11 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
         
         [invocation invokeWithTarget:me];
         
+        if (strcmp([signature methodReturnType], "v") == 0) return nil;
+        
         void *retVal;
         [invocation getReturnValue:&retVal];
-        return strcmp([signature methodReturnType], "v") == 0 ? nil : retVal;
+        return retVal;
     };
 }
 
