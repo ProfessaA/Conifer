@@ -8,6 +8,12 @@ static const char *stubbedMethodsKey = "stubbedMethodsKey";
 static const char *isStubbedKey = "isStubbedKey";
 static const char *withArgumentsKey = "withArgumentsKey";
 
+@interface NSObject (ConiferPrivate)
+
+- (NSMutableDictionary *)stubbedMethods;
+
+@end
+
 #pragma mark - Helper Functions
 
 SEL stubbedSelectorForSelector(SEL selector)
@@ -59,6 +65,8 @@ id stubBlockForSelectorWithMethodSignature(SEL selector, NSMethodSignature *sign
         }
         va_end(args);
         
+        [[me stubbedMethods][NSStringFromSelector(selector)] addObject:receivedArguments];
+        
         if (withArgumentsArray(me).count) {
             __block NSUInteger matchedArgumentsIndex = NSNotFound;
             [withArgumentsArray(me) enumerateObjectsUsingBlock:^(NSArray *withArguments, NSUInteger idx, BOOL *stop) {
@@ -101,12 +109,17 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
 
 - (BOOL)isStubbingMethod:(SEL)selector
 {
-    return [[self stubbedMethods] containsObject:NSStringFromSelector(selector)];
+    return [self stubbedMethods][NSStringFromSelector(selector)] != nil;
 }
 
 - (BOOL)isStubbingMethods
 {
     return [objc_getAssociatedObject(self, isStubbedKey) boolValue];
+}
+
+- (BOOL)didReceive:(SEL)selector
+{
+    return [[self stubbedMethods][NSStringFromSelector(selector)] count] > 0;
 }
 
 #pragma mark - Creating Initial Stub
@@ -116,7 +129,7 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     if (![self isStubbingMethod:selector]) {
         if (![self isStubbingMethods]) [self _stub];
         
-        [[self stubbedMethods] addObject:NSStringFromSelector(selector)];
+        [self stubbedMethods][NSStringFromSelector(selector)] = [@[] mutableCopy];
         
         stubSelectorFromSourceClassOnDestinationClass(selector,
                                                       class_getSuperclass(object_getClass(self)),
@@ -203,7 +216,7 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
 
 # pragma mark - Private
 
-- (NSMutableArray *)stubbedMethods
+- (NSMutableDictionary *)stubbedMethods
 {
     return objc_getAssociatedObject(self, stubbedMethodsKey);
 }
@@ -217,7 +230,7 @@ void stubSelectorFromSourceClassOnDestinationClass(SEL selector, Class sourceCla
     objc_registerClassPair(objectMetaClass);
     object_setClass(self, objectMetaClass);
     objc_setAssociatedObject(self, isStubbedKey, [NSNumber numberWithBool:YES], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(self, stubbedMethodsKey, [@[] mutableCopy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, stubbedMethodsKey, [@{} mutableCopy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(self, withArgumentsKey, [@[] mutableCopy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 

@@ -244,6 +244,19 @@
                     @"stub did not throw when called with incorrect arguments");
 }
 
+- (void)testInstancesCanBeQueriedAboutAMethodBeingCalled
+{
+    [self.stubbed stub:@selector(repeatString:times:)];
+    [self.stubbed stub:@selector(intRetVal)];
+    
+    [self.stubbed repeatString:@"*" times:2];
+    
+    XCTAssertTrue([self.stubbed didReceive:@selector(repeatString:times:)],
+                  @"stubbed instance not reporting that its selector was called");
+    XCTAssertFalse([self.stubbed didReceive:@selector(intRetVal)],
+                   @"stubbed instance falsely reporting that its selector was called");
+}
+
 - (void)testClassMethodsCanBeStubbed
 {
     [TestObject stub:@selector(classMethod)];
